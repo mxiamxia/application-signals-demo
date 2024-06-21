@@ -38,7 +38,9 @@ spec:
           env:
             - name: OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_SPAN_ATTRIBUTES
               value: "true"
-          image: 111122223333.dkr.ecr.us-west-2.amazonaws.com/springcommunity/spring-petclinic-visits-service:latest
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "aws.log.group.names=/aws/containerinsights/pulse-dev/application"
+          image: 252610625673.dkr.ecr.us-east-1.amazonaws.com/springcommunity/spring-petclinic-visits-service:latest
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false

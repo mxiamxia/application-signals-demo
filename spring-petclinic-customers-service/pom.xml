@@ -74,6 +74,16 @@
     <scope>provided</scope>
   </dependency>
   <dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20231013</version>
+  </dependency>
+  <dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>bedrockruntime</artifactId>
+    <version>2.21.17</version>
+  </dependency>
+  <dependency>
     <groupId>io.micrometer</groupId>
     <artifactId>micrometer-registry-prometheus</artifactId>
   </dependency>
@@ -96,11 +106,22 @@
     <artifactId>s3</artifactId>
     <version>2.20.46</version>
   </dependency>
+  <dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>sns</artifactId>
+    <version>2.20.46</version>
+  </dependency>
   <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb-enhanced -->
   <dependency>
     <groupId>software.amazon.awssdk</groupId>
     <artifactId>dynamodb-enhanced</artifactId>
     <version>2.20.46</version>
+  </dependency>
+
+  <dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>secretsmanager</artifactId>
+    <version>2.20.47</version>
   </dependency>
   <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/kinesis -->
   <dependency>

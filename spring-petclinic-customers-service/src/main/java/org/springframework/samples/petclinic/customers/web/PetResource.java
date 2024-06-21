@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.samples.petclinic.customers.aws.KinesisService;
+import org.springframework.samples.petclinic.customers.aws.SnsService;
 import org.springframework.samples.petclinic.customers.aws.SqsService;
 import org.springframework.samples.petclinic.customers.model.*;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +49,7 @@ class PetResource {
     private final OwnerRepository ownerRepository;
     private final SqsService sqsService;
     private final KinesisService kinesisService;
+    private final SnsService snsService;
 
     @GetMapping("/petTypes")
     public List<PetType> getPetTypes() {
@@ -66,6 +68,7 @@ class PetResource {
         sqsService.sendMsg();
         final Pet pet = new Pet();
         owner.addPet(pet);
+        snsService.pubTopic("test-msg:" + pet.getName());
         return save(pet, petRequest);
     }
 

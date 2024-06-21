@@ -25,6 +25,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.samples.petclinic.customers.aws.KinesisService;
+import org.springframework.samples.petclinic.customers.aws.SnsService;
 import org.springframework.samples.petclinic.customers.aws.SqsService;
 import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.model.OwnerRepository;
@@ -64,6 +65,9 @@ class PetResourceTest {
 
     @MockBean
     KinesisService kinesisService;
+
+    @MockBean
+    SnsService snsService;
 
     @Test
     void shouldGetAPetInJSonFormat() throws Exception {

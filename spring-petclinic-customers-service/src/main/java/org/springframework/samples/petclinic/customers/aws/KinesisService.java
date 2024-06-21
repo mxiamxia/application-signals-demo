@@ -63,7 +63,8 @@ public class KinesisService {
 
         // Retrieve the Shards from a Stream
         DescribeStreamRequest describeStreamRequest = DescribeStreamRequest.builder()
-            .streamName(streamName)
+//            .streamName(streamName)
+                .streamARN("arn:aws:kinesis:us-east-1:252610625673:stream/apm_test")
             .build();
 
         List<Shard> shards = new ArrayList<>();
@@ -106,5 +107,11 @@ public class KinesisService {
             SdkBytes byteBuffer = record.data();
             System.out.printf("Seq No: %s - %s%n", record.sequenceNumber(), new String(byteBuffer.asByteArray()));
         }
+    }
+
+    public static void main(String[] args) {
+        KinesisService client = new KinesisService();
+//        client.createStream();
+        client.getStreamRecords();
     }
 }
