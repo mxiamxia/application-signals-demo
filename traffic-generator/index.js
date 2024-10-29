@@ -143,7 +143,14 @@ createOwnerHighTrafficTask.start();
 const postPetsLowTrafficTask = cron.schedule('*/2 * * * *', () => {
     console.log('add 1 pet every 2 minutes');
     const name = "lastName" + new Date().toLocaleTimeString();
-    const data = {"id":0,"name":name ,"birthDate":"2023-11-20T08:00:00.000Z","typeId":"1"}
+    const getRandomYear = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const randomYear = getRandomYear(2010, 2024);
+    const data = {
+        "id": 0,
+        "name": 'name',
+        "birthDate": `2023-11-20T08:00:00.000Z`.replace("2023", randomYear),
+        "typeId": "1"
+    };
     axios.post(`${baseUrl}/api/customer/owners/7/pets`, data, { timeout: 10000 })
         .catch(err => {
             console.error("Failed to post /api/customer/owners/7/pets, error: " + (err.response ? err.response.data : err.toString()));

@@ -19,6 +19,8 @@
 package org.springframework.samples.petclinic.customers.web;
 
 import io.micrometer.core.annotation.Timed;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongHistogram;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,12 +28,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.customers.aws.*;
 import org.springframework.samples.petclinic.customers.model.*;
+import org.springframework.samples.petclinic.customers.otel.MetricProvider;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.Min;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 /**
  * @author Juergen Hoeller
@@ -56,9 +66,12 @@ class PetResource {
     private final BedrockRuntimeV2Service bedrockRuntimeV2Service;
     private final BedrockV1Service bedrockV1Service;
     private final BedrockV2Service bedrockV2Service;
+    private final MetricProvider metricProvider;
 
     @Autowired
     private RestTemplate restTemplate;
+
+    LongHistogram ageMetrics;
 
     @GetMapping("/petTypes")
     public List<PetType> getPetTypes() {
@@ -78,8 +91,19 @@ class PetResource {
         try {
             sqsService.sendMsg();
             owner.addPet(pet);
+            int petAge = calculateAge(pet.getBirthDate());
+            Attributes attrs =
+                    Attributes.of(
+                            stringKey("Operation"), "POST /owners/{ownerId}/pets",
+                            stringKey("Service"), "customers-service-java");
+            if (ageMetrics == null) {
+                ageMetrics = metricProvider.createHistogramMetric("PetAge");
+            }
+            ageMetrics.record(petAge, attrs);
+            log.info("Recorded pet age: {}", petAge);
+
         } catch (Exception e) {
-            log.error("Failed to add pet: '{}' for owner: '{}'", petRequest.getName(), owner);
+            log.error("Failed to add pet: '{}' for owner: '{}' with exception:", petRequest.getName(), owner, e);
             throw e;
         }
         return save(pet, petRequest);
@@ -175,6 +199,23 @@ class PetResource {
             throw new ResourceNotFoundException("Pet "+petId+" not found");
         }
         return pet.get();
+    }
+
+    private static int calculateAge(Date birthDate) {
+        if (birthDate == null) {
+            Random random = new Random();
+            return random.nextInt(14) + 1;
+        }
+        // Convert Date to LocalDate
+        LocalDate birthLocalDate = birthDate.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        // Get current date
+        LocalDate currentDate = LocalDate.now();
+
+        // Calculate the period between the birth date and current date
+        return Period.between(birthLocalDate, currentDate).getYears();
     }
 
 }
