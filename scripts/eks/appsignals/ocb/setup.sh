@@ -31,13 +31,14 @@ check_if_step_failed_and_exit() {
 }
 
 # create cluster
-../create-cluster.sh $CLUSTER_NAME $REGION
+#../create-cluster.sh $CLUSTER_NAME $REGION
 check_if_step_failed_and_exit "There was an error creating cluster $CLUSTER_NAME in region $REGION, exiting"
 
 # enable application signals auto-instrumentation
 ../enable-app-signals-ocb.sh $CLUSTER_NAME $REGION $NAMESPACE
 check_if_step_failed_and_exit "There was an error enabling app signals with namespace $NAMESPACE, exiting"
 
+# wait for operator webhook ready
 sleep 30s
 # deploy appsignals collector and instrumentation
 kubectl apply -f ./manifests/appsignals-collector.yaml -n $NAMESPACE

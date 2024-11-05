@@ -71,7 +71,7 @@ spec:
       awsapplicationsignals:
         resolvers:
           - platform: eks
-            name: appsignals-ocb-demo
+            name: appsignals-ocb-pom-demo
 
     exporters:
       otlphttp:
@@ -82,6 +82,7 @@ spec:
       awsxray/application_signals:
         region: 'us-west-2'
         index_all_attributes: false
+        local_mode: true
         indexed_attributes:
           - aws.local.service
           - aws.local.operation
@@ -91,11 +92,29 @@ spec:
           - aws.remote.environment
           - aws.remote.resource.identifier
           - aws.remote.resource.type
+      awsxray/otel:
+        region: 'us-west-2'
+        index_all_attributes: false
+        transit_spans_in_otlp_format: true
+        local_mode: true
+        indexed_attributes:
+          - aws.local.service
+          - aws.local.operation
+          - aws.local.environment
+          - aws.remote.service
+          - aws.remote.operation
+          - aws.remote.environment
+          - aws.remote.resource.identifier
+          - aws.remote.resource.type
+      debug:
+        verbosity: detailed
+        sampling_initial: 10
+        sampling_thereafter: 1000    
 
       awsemf:
         region: 'us-west-2'
         log_group_name: "/aws/application-signals/custom"
-        namespace: "ApplicationSignalsCustom"
+        namespace: "ApplicationSignalsCustomPoM"
         dimension_rollup_option: "NoDimensionRollup"    
 
       awsemf/application_signals:
@@ -137,14 +156,10 @@ spec:
 
     service:
       pipelines:
-        traces:
-          receivers: [otlp/application_signals]
+        traces/otel:
+          receivers: [otlp]
           processors: [awsapplicationsignals]
-          exporters: [awsxray/application_signals]
-        metrics:
-          receivers: [otlp/application_signals]
-          processors: [awsapplicationsignals]
-          exporters: [awsemf/application_signals]
+          exporters: [otlphttp, debug, awsxray/otel]
         metrics/2:
           receivers: [otlp]
           exporters: [awsemf]
@@ -164,25 +179,30 @@ spec:
   nodejs:
     image: public.ecr.aws/n7z4r8f9/adot-js-amznlinux:latest
     env:
-      - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-        value: http://appsignals-collector:4316/v1/traces
+      # - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+      #   value: http://appsignals-collector:4316/v1/traces
       - name: OTEL_AWS_APPLICATION_SIGNALS_ENABLED
-        value: "true"
-      - name: OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT
-        value: http://appsignals-collector:4316/v1/metrics
+        value: "false"
+      # - name: OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT
+      #   value: http://appsignals-collector:4316/v1/metrics
       - name: OTEL_EXPORTER_OTLP_PROTOCOL
         value: "http/protobuf"  
   java:
     image: public.ecr.aws/aws-observability/adot-autoinstrumentation-java:v1.32.5
+    # image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:1.32.1
     env:
-      - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-        value: http://appsignals-collector:4316/v1/traces
-      - name: OTEL_AWS_APPLICATION_SIGNALS_ENABLED
-        value: "true"
-      - name: OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT
-        value: http://appsignals-collector:4316/v1/metrics
+      # - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+      #   value: http://appsignals-collector:4316/v1/traces
+      # - name: OTEL_AWS_APPLICATION_SIGNALS_ENABLED
+      #   value: "false"
+      # - name: OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT
+      #   value: http://appsignals-collector:4316/v1/metrics
       - name: OTEL_EXPORTER_OTLP_PROTOCOL
         value: "http/protobuf"  
+      - name: OTEL_TRACES_IDGENERATOR
+        value: "xray"
+      # - name: OTEL_TRACES_SAMPLER
+      #   value: "always_on"
       # - name: OTEL_JMX_ENABLE
       #   value: "true"
       # - name: OTEL_JMX_TARGET_SYSTEM

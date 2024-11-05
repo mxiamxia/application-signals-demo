@@ -51,9 +51,6 @@ spec:
     extensions:
       awsproxy:
       health_check:
-      sigv4auth:
-        region: "us-west-2"
-        service: "xray"     
 
     receivers:
       otlp:
@@ -74,13 +71,8 @@ spec:
             name: appsignals-ocb-demo
 
     exporters:
-      otlphttp:
-        traces_endpoint: https://xray-beta.us-west-2.amazonaws.com/v1/traces
-        compression: zstd
-        auth:
-          authenticator: sigv4auth
       awsxray/application_signals:
-        region: 'us-west-2'
+        region: 'us-east-1'
         index_all_attributes: false
         indexed_attributes:
           - aws.local.service
@@ -92,14 +84,8 @@ spec:
           - aws.remote.resource.identifier
           - aws.remote.resource.type
 
-      awsemf:
-        region: 'us-west-2'
-        log_group_name: "/aws/application-signals/custom"
-        namespace: "ApplicationSignalsCustom"
-        dimension_rollup_option: "NoDimensionRollup"    
-
       awsemf/application_signals:
-        region: 'us-west-2'
+        region: 'us-east-1'
         log_group_name: "/aws/application-signals/data"
         namespace: "ApplicationSignals"
         dimension_rollup_option: "NoDimensionRollup"
@@ -145,10 +131,15 @@ spec:
           receivers: [otlp/application_signals]
           processors: [awsapplicationsignals]
           exporters: [awsemf/application_signals]
-        metrics/2:
+       metrics/runtime:
+          receivers: [otlp]
+          processors: [awsapplicationsignals]
+          exporters: [awsemf]
+       metrics/custom:
           receivers: [otlp]
           exporters: [awsemf]
-      extensions: [sigv4auth]
+
+      extensions: [health_check]
       telemetry:
         logs:
           level: debug
@@ -173,7 +164,7 @@ spec:
       - name: OTEL_EXPORTER_OTLP_PROTOCOL
         value: "http/protobuf"  
   java:
-    image: public.ecr.aws/aws-observability/adot-autoinstrumentation-java:v1.32.5
+    image: public.ecr.aws/aws-observability/adot-autoinstrumentation-java:v1.32.4
     env:
       - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
         value: http://appsignals-collector:4316/v1/traces
@@ -183,7 +174,3 @@ spec:
         value: http://appsignals-collector:4316/v1/metrics
       - name: OTEL_EXPORTER_OTLP_PROTOCOL
         value: "http/protobuf"  
-      # - name: OTEL_JMX_ENABLE
-      #   value: "true"
-      # - name: OTEL_JMX_TARGET_SYSTEM
-      #   value: "jvm"

@@ -64,4 +64,5 @@ check_if_step_failed_and_exit "There was an error creating the ServiceAccount, e
 
 # Install OpenTelemetry Operator
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.yaml
+sleep 30s
 kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
