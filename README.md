@@ -197,3 +197,18 @@ The following instructions set up an ECS cluster with all services running in Fa
    ```
    cd scripts/ecs/appsignals/ && ./setup-ecs-demo.sh --operation=delete --region=region-name
    ```
+
+# Lambda Demo
+The following instructions describe how to set up the Lambda sample application on EC2 instances. You can run these steps in your personal AWS account to follow along.
+
+Note that Python and Terraform are required.
+1. Install
+   ```
+   cd lambda-petclinic && ./installDemo.sh
+   ```
+
+
+2. Clean up
+   ```
+   cd lambda-petclinic/terraform2 && terraform destroy -auto-approve
+   ```
