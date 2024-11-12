@@ -31,7 +31,7 @@ check_if_step_failed_and_exit() {
 }
 
 # create cluster
-#../create-cluster.sh $CLUSTER_NAME $REGION
+../create-cluster.sh $CLUSTER_NAME $REGION
 check_if_step_failed_and_exit "There was an error creating cluster $CLUSTER_NAME in region $REGION, exiting"
 
 # enable application signals auto-instrumentation
