@@ -14,14 +14,10 @@ resource "aws_dynamodb_table" "my_table" {
 }
 
 ### IAM role
-data "aws_iam_role" "existing_role" {
-  name = try(local.role_name, "")
-}
 
 resource "aws_iam_role" "lambda_exec_role" {
-  count = data.aws_iam_role.existing_role.id != "" ? 0 : 1
 
-  name = local.role_name
+  name = "lambda_exec_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -35,12 +31,7 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
-data "aws_iam_policy" "existing_policy" {
-  name = try(local.policy_name, "")
-}
-
 resource "aws_iam_policy" "lambda_policy" {
-  count = data.aws_iam_policy.existing_policy.id != "" ? 0 : 1
   name        = local.policy_name
   description = "IAM policy for Lambda to write logs to CloudWatch"
 
@@ -69,9 +60,9 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
 }
 
 locals {
-  role_arn = data.aws_iam_role.existing_role.id != "" ? data.aws_iam_role.existing_role.arn : aws_iam_role.lambda_exec_role[0].arn
+  role_arn = aws_iam_role.lambda_exec_role.arn
   role_name = "lambda_exec_role"
-  policy_arn = data.aws_iam_policy.existing_policy.id != "" ? data.aws_iam_policy.existing_policy.arn : aws_iam_policy.lambda_policy[0].arn
+  policy_arn = aws_iam_policy.lambda_policy.arn
   policy_name = "lambda_policy"
   layer_arns = {
     "af-south-1"     = "arn:aws:lambda:af-south-1:904233096616:layer:AWSOpenTelemetryDistroPython:4"
@@ -105,14 +96,6 @@ locals {
   }
 }
 
-### lambda layer
-resource "aws_lambda_layer_version" "sdk_layer" {
-  layer_name          = "AWSOpenTelemetryDistroPython"
-  filename            = "${path.module}/../src/build/aws-opentelemetry-python-layer.zip"
-  compatible_runtimes = ["python3.10", "python3.11", "python3.12"]
-  license_info        = "Apache-2.0"
-  source_code_hash    = filebase64sha256("${path.module}/../src/build/aws-opentelemetry-python-layer.zip")
-}
 
 ###### lambda functions
 resource "aws_lambda_function" "my_lambda" {
