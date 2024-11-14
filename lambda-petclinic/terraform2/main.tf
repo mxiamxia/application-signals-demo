@@ -1,4 +1,7 @@
 data "aws_region" "current" {}
+provider "aws" {
+  region = "us-east-1"
+}
 
 #### DynamoDB
 resource "aws_dynamodb_table" "my_table" {

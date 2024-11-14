@@ -19,11 +19,13 @@
 package org.springframework.samples.petclinic.customers.web;
 
 import io.micrometer.core.annotation.Timed;
+import io.opentelemetry.api.trace.Span;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
+import org.springframework.samples.petclinic.customers.Util.WellKnownAttributes;
 import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.model.OwnerRepository;
 import org.springframework.samples.petclinic.customers.model.Pet;
@@ -60,6 +62,9 @@ class OwnerResource {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Owner createOwner(@Valid @RequestBody Owner owner) throws Exception {
+        Span.current().setAttribute(WellKnownAttributes.OWNER_ID, owner.getId());
+        Span.current().setAttribute(WellKnownAttributes.ORDER_ID, owner.getId());
+
         // don't save the owner for testing traffic
         if (owner.getFirstName().equals("random-traffic")) {
             return owner;
@@ -72,6 +77,9 @@ class OwnerResource {
      */
     @GetMapping(value = "/{ownerId}")
     public Optional<Owner> findOwner(@PathVariable("ownerId") int ownerId) {
+        Span.current().setAttribute(WellKnownAttributes.OWNER_ID, ownerId);
+        Span.current().setAttribute(WellKnownAttributes.ORDER_ID, ownerId);
+
         if (ownerId < 1) {
             log.error("Invalid owner id provided: {}", ownerId);
             String reason = "Invalid user identifier " + ownerId + ": must be a positive number.";
@@ -94,6 +102,9 @@ class OwnerResource {
     @PutMapping(value = "/{ownerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateOwner(@PathVariable("ownerId") @Min(1) int ownerId, @Valid @RequestBody Owner ownerRequest) {
+        Span.current().setAttribute(WellKnownAttributes.OWNER_ID, ownerId);
+        Span.current().setAttribute(WellKnownAttributes.ORDER_ID, ownerRequest.getId());
+
         final Optional<Owner> owner = ownerRepository.findById(ownerId);
         final Owner ownerModel = owner.orElseThrow(() -> new ResourceNotFoundException("Owner "+ownerId+" not found"));
 
@@ -110,7 +121,6 @@ class OwnerResource {
     @Scheduled(cron = "0 0 8 * * ?") // every PST midnight
     public void ageOldData() {
         log.info("ageOldData() get called and purge all data!");
-        ownerRepository.deleteAll();
         /* Purge pets. */
         Pet pet = new Pet();
         pet.setName("lastName");

@@ -18,10 +18,12 @@
  */
 package org.springframework.samples.petclinic.api.application;
 
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import lombok.RequiredArgsConstructor;
 import org.springframework.samples.petclinic.api.dto.InsuranceDetail;
 import org.springframework.samples.petclinic.api.dto.PetInsurance;
+import org.springframework.samples.petclinic.api.utils.WellKnownAttributes;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -55,7 +57,7 @@ public class InsuranceServiceClient {
                 .bodyToMono(Void.class);
     }
     @WithSpan
-    public Mono<PetInsurance> updatePetInsurance(final int petId, final PetInsurance petInsurance) {
+    public Mono<PetInsurance> updatePetInsurance(@SpanAttribute(WellKnownAttributes.PET_ID) final int petId, final PetInsurance petInsurance) {
         return webClientBuilder.build()
                 .put()
                 .uri("http://insurance-service/pet-insurances/" + petId + "/")
@@ -64,7 +66,7 @@ public class InsuranceServiceClient {
                 .bodyToMono(PetInsurance.class);
     }
     @WithSpan
-    public Mono<PetInsurance> getPetInsurance(final int petId) {
+    public Mono<PetInsurance> getPetInsurance(@SpanAttribute(WellKnownAttributes.PET_ID) final int petId) {
         return webClientBuilder.build()
                 .get()
                 .uri("http://insurance-service/pet-insurances/" + petId + "/")

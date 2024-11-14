@@ -19,6 +19,7 @@
 package org.springframework.samples.petclinic.api.application;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -60,7 +61,7 @@ public class VisitsServiceClient {
     }
 
     @WithSpan
-    public Mono<Visits> getVisitsForOwnersPets(final int ownerId, final int petId) {
+    public Mono<Visits> getVisitsForOwnersPets(@SpanAttribute(WellKnownAttributes.OWNER_ID) final int ownerId, @SpanAttribute(WellKnownAttributes.PET_ID) final int petId) {
         // Span.current().setAttribute(WellKnownAttributes.REMOTE_APPLICATION, "visits-service");
         // Span.current().setAttribute(WellKnownAttributes.REMOTE_OPERATION, "/owners/*/pets/{petId}/visits");
         return webClientBuilder.build()
@@ -72,7 +73,7 @@ public class VisitsServiceClient {
     }
 
     @WithSpan
-    public Mono<String> addVisitForOwnersPets(final int ownerId, final int petId, final VisitDetails visitDetails) {
+    public Mono<String> addVisitForOwnersPets(@SpanAttribute(WellKnownAttributes.OWNER_ID) final int ownerId, @SpanAttribute(WellKnownAttributes.PET_ID) final int petId, final VisitDetails visitDetails) {
         // Span.current().setAttribute(WellKnownAttributes.REMOTE_APPLICATION, "visits-service");
         // Span.current().setAttribute(WellKnownAttributes.REMOTE_OPERATION, "/owners/*/pets/{petId}/visits");
         return webClientBuilder.build()

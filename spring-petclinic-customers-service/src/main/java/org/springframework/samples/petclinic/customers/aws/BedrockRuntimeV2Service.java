@@ -35,7 +35,7 @@ public class BedrockRuntimeV2Service {
     public String invokeAnthropicClaude() {
         try {
             System.out.printf("Invoke Anthropic claude: ");
-            String claudeModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
+            String claudeModelId = "anthropic.claude-v2:1";
             String prompt = "What's the common disease for a pet?";
             JSONObject userMessage = new JSONObject()
                     .put("role", "user")
