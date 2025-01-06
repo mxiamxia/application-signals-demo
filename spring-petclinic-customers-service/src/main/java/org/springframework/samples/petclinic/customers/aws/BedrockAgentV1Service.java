@@ -7,10 +7,12 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.bedrockagent.AWSBedrockAgent;
 import com.amazonaws.services.bedrockagent.AWSBedrockAgentClientBuilder;
 import com.amazonaws.services.bedrockagent.model.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.samples.petclinic.customers.Util;
 import org.springframework.stereotype.Component;
 import java.util.List;
 @Component
+@Slf4j
 public class BedrockAgentV1Service {
     final AWSBedrockAgent bedrockAgentV1Client;
 
@@ -18,14 +20,14 @@ public class BedrockAgentV1Service {
         // AWS web identity is set for EKS clusters, if these are not set then use default credentials
         if (System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE") == null && System.getProperty("aws.webIdentityTokenFile") == null) {
             bedrockAgentV1Client = AWSBedrockAgentClientBuilder.standard()
-                .withRegion(Util.REGION_FROM_EC2)
-                .build();
+                    .withRegion(Util.REGION_FROM_EC2)
+                    .build();
         }
         else {
             bedrockAgentV1Client = AWSBedrockAgentClientBuilder.standard()
-                .withRegion(Util.REGION_FROM_EKS)
-                .withCredentials(WebIdentityTokenCredentialsProvider.create())
-                .build();
+                    .withRegion(Util.REGION_FROM_EKS)
+                    .withCredentials(WebIdentityTokenCredentialsProvider.create())
+                    .build();
         }
     }
 
@@ -36,17 +38,17 @@ public class BedrockAgentV1Service {
             List<KnowledgeBaseSummary> summaries =listResponse.getKnowledgeBaseSummaries();
             if(summaries != null && summaries.size() > 0 ) {
                 String knowledgeBaseId = summaries.get(0).getKnowledgeBaseId();
-                System.out.printf("GetKnowledgeBaseRequest: " + knowledgeBaseId);
+                log.info("GetKnowledgeBaseRequest: " + knowledgeBaseId);
                 GetKnowledgeBaseRequest request = new GetKnowledgeBaseRequest()
                         .withKnowledgeBaseId(knowledgeBaseId);
                 GetKnowledgeBaseResult response = bedrockAgentV1Client.getKnowledgeBase(request);
-                System.out.printf("KnowledgeBase ID: " + response.getKnowledgeBase().getName());
+                log.info("KnowledgeBase ID: " + response.getKnowledgeBase().getName());
                 return response.getKnowledgeBase().getName();
             } else {
                 return "no knowledge base summaries found";
             }
         } catch (Exception e) {
-            System.out.printf("Failed to GetKnowledgeBaseRequest. Error: %s%n", e.getMessage());
+            log.error("Failed to GetKnowledgeBaseRequest. Error: %s", e.getMessage());
             throw e;
         }
     }

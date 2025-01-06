@@ -70,16 +70,16 @@ class PetResource {
     @PostMapping("/owners/{ownerId}/pets")
     @ResponseStatus(HttpStatus.CREATED)
     public Pet processCreationForm(
-        @RequestBody PetRequest petRequest,
-        @PathVariable("ownerId") @Min(1) int ownerId) {
-        
+            @RequestBody PetRequest petRequest,
+            @PathVariable("ownerId") @Min(1) int ownerId) {
+
         Span.current().setAttribute(WellKnownAttributes.PET_ID, petRequest.getId());
         Span.current().setAttribute(WellKnownAttributes.OWNER_ID, ownerId);
         Span.current().setAttribute(WellKnownAttributes.ORDER_ID, petRequest.getId());
 
         final Optional<Owner> optionalOwner = ownerRepository.findById(ownerId);
         Owner owner = optionalOwner.orElseThrow(() -> new ResourceNotFoundException("Owner "+ownerId+" not found"));
-        
+
         final Pet pet = new Pet();
         try {
             sqsService.sendMsg();
@@ -106,7 +106,17 @@ class PetResource {
         log.info("bedrockV1Service FINISH Getting guardrail");
         log.info("DEBUG: CALLING BEDROCK petId = " + petId);
         log.info("DEBUG: bedrockRuntimeV1Service Invoking Titan model");
-        bedrockRuntimeV1Service.invokeTitanModel();
+        String petType = "pets";
+        try {
+            Pet pet = findPetById(petId);
+            if (pet.getType() != null) {
+                petType = pet.getType().getName();
+            }
+        } catch (Exception e) {
+            log.error("Failed to find pet: '{}' ", petId);
+        }
+
+        bedrockRuntimeV1Service.invokeTitanModel(petType);
         log.info("bedrockRuntimeV1Service FINISH Invoking Titan model");
         log.info("bedrockAgentV2Service Getting knowledge base");
         bedrockAgentV2Service.bedrockAgentGetKnowledgeBaseV2();
@@ -115,7 +125,7 @@ class PetResource {
         bedrockV2Service.getGuardrail();
         log.info("bedrockV2Service FINISH Getting guardrail");
         log.info("bedrockRuntimeV2Service Invoking Anthropic claude");
-        bedrockRuntimeV2Service.invokeAnthropicClaude();
+        bedrockRuntimeV2Service.invokeAnthropicClaude(petType);
         log.info("bedrockRuntimeV2Service FINISH Invoking Anthropic claude");
     }
 
@@ -137,7 +147,7 @@ class PetResource {
         pet.setName(petRequest.getName());
         pet.setBirthDate(petRequest.getBirthDate());
         petRepository.findPetTypeById(petRequest.getTypeId())
-            .ifPresent(pet::setType);
+                .ifPresent(pet::setType);
 
         log.info("Saving pet {}", pet);
         return petRepository.save(pet);
@@ -171,8 +181,8 @@ class PetResource {
         // enrich with nutrition
         PetNutrition petNutrition = null;
         // try{
-            ResponseEntity<PetNutrition> response = restTemplate.getForEntity("http://nutrition-service/nutrition/" + detail.getType().getName(), PetNutrition.class);
-            petNutrition = response.getBody();
+        ResponseEntity<PetNutrition> response = restTemplate.getForEntity("http://nutrition-service/nutrition/" + detail.getType().getName(), PetNutrition.class);
+        petNutrition = response.getBody();
         // }
         // catch (Exception ex){
         //     ex.printStackTrace();

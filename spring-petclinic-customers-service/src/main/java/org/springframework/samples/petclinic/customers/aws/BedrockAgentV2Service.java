@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package org.springframework.samples.petclinic.customers.aws;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.samples.petclinic.customers.Util;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider;
@@ -10,6 +11,7 @@ import software.amazon.awssdk.services.bedrockagent.BedrockAgentClient;
 import software.amazon.awssdk.services.bedrockagent.model.*;
 
 @Component
+@Slf4j
 public class BedrockAgentV2Service {
     final BedrockAgentClient bedrockAgentV2Client;
 
@@ -35,17 +37,17 @@ public class BedrockAgentV2Service {
             ListKnowledgeBasesResponse listResponse = bedrockAgentV2Client.listKnowledgeBases(listRequest);
             if(listResponse.hasKnowledgeBaseSummaries()) {
                 String knowledgeBaseId = listResponse.knowledgeBaseSummaries().get(0).knowledgeBaseId();
-                System.out.printf("GetKnowledgeBaseRequest: " + knowledgeBaseId);
+                log.info("GetKnowledgeBaseRequest: " + knowledgeBaseId);
                 GetKnowledgeBaseRequest request = GetKnowledgeBaseRequest.builder()
                         .knowledgeBaseId(knowledgeBaseId).build();
                 GetKnowledgeBaseResponse response = bedrockAgentV2Client.getKnowledgeBase(request);
-                System.out.printf("KnowledgeBase ID: " + response.knowledgeBase().knowledgeBaseId());
+                log.info("KnowledgeBase ID: " + response.knowledgeBase().knowledgeBaseId());
                 return response.knowledgeBase().knowledgeBaseId();
             } else {
                 return "";
             }
         } catch (Exception e) {
-            System.out.printf("Failed to GetKnowledgeBaseRequest! Error: %s%n", e.getMessage());
+            log.error("Failed to GetKnowledgeBaseRequest! Error: %s", e.getMessage());
             throw e;
         }
     }
